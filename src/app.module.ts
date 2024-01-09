@@ -7,6 +7,8 @@ import { AllExceptionsFilter } from './all-exceptions.filter';
 import { APP_FILTER } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { join } from 'path';
       rootPath: join(__dirname, '..', 'client'),
       exclude: ['/api/(.*)'],
     }),
+    AuthModule,
+    UsersModule,
   ],
   providers: [
     {
