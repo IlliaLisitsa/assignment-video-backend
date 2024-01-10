@@ -126,9 +126,8 @@ export class UsersController {
     }
 
     const ROOT_URL = this.configService.get('ROOT_URL');
-    const PORT = this.configService.get('PORT');
 
-    const posterUrl = `${ROOT_URL}:${PORT}/${file.filename}`;
+    const posterUrl = `${ROOT_URL}/${file.filename}`;
 
     const movie = await this.moviesService.createMovie(
       user,
