@@ -187,9 +187,8 @@ export class UsersController {
     }
 
     const ROOT_URL = this.configService.get('ROOT_URL');
-    const PORT = this.configService.get('PORT');
 
-    const posterUrl = file ? `${ROOT_URL}:${PORT}/${file.filename}` : undefined;
+    const posterUrl = file ? `${ROOT_URL}/${file.filename}` : undefined;
 
     const movie = await this.moviesService.updateMovie(
       movieId,
