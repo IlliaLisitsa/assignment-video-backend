@@ -52,6 +52,22 @@ export class MoviesService {
     await this.moviesRepository.delete(movie.id);
   }
 
+  async getMoviesByUserIdWithTotal(
+    userId: string,
+    skipPages: number,
+    pageSize: number,
+  ): Promise<{ movies: Movie[]; totalCount: number }> {
+    const [movies, totalCount] = await this.moviesRepository
+      .createQueryBuilder('movie')
+      .leftJoin('movie.user', 'user')
+      .where('user.id = :userId', { userId })
+      .skip(skipPages * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return { movies, totalCount };
+  }
+
   getMoviesByUserId(userId: string): Promise<Movie[]> {
     return this.moviesRepository
       .createQueryBuilder('movie')
@@ -81,7 +97,9 @@ export class MoviesService {
       const fileName = new URL(poster).pathname.replace('/', '');
       const filePath = join(__dirname, '..', '..', 'client', fileName);
 
-      this.filesService.removeFileFromFS(filePath);
+      if (posterUrl) {
+        this.filesService.removeFileFromFS(filePath);
+      }
     }
 
     delete existingMovie.user;
@@ -89,7 +107,7 @@ export class MoviesService {
     return existingMovie;
   }
 
-  private async getMovieById(id: number, userId?: number): Promise<Movie> {
+  async getMovieById(id: number, userId?: number): Promise<Movie> {
     const query = this.moviesRepository
       .createQueryBuilder('movie')
       .where('movie.id = :id', { id });

@@ -4,7 +4,6 @@ import { Type } from 'class-transformer';
 
 export class CreateMovieReqDto {
   @ApiProperty({ type: 'string', format: 'binary' })
-  @IsNotEmpty()
   file: any;
 
   @ApiProperty({ example: 'Star wars' })

@@ -3,15 +3,13 @@ import {
   Body,
   Controller,
   Delete,
-  FileTypeValidator,
   Get,
   HttpCode,
-  MaxFileSizeValidator,
   NotFoundException,
   Param,
-  ParseFilePipe,
   Patch,
   Post,
+  Query,
   Request,
   UploadedFile,
   UseGuards,
@@ -36,6 +34,7 @@ import { ConfigService } from '@nestjs/config';
 import { UpdateMovieRespDto } from './dto/updateMovie-resp.dto';
 import { UpdateMovieReqDto } from './dto/updateMovie-req.dto';
 import { DeleteMovieRespDto } from './dto/deleteMovie-resp.dto';
+import { GetMovieByIdRespDto } from './dto/getMovieById-resp.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -51,10 +50,32 @@ export class UsersController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('movies')
-  async getAllUsersMovies(@Request() req): Promise<GetMoviesRespDto> {
-    const movies = await this.moviesService.getMoviesByUserId(req.user.id);
+  async getAllUsersMovies(
+    @Request() req,
+    @Query('skipPages') skipPages: number,
+    @Query('pageSize') pageSize: number,
+  ): Promise<GetMoviesRespDto> {
+    const { movies, totalCount } =
+      await this.moviesService.getMoviesByUserIdWithTotal(
+        req.user.id,
+        skipPages,
+        pageSize,
+      );
 
-    return { movies };
+    return { movies, totalCount };
+  }
+
+  @ApiResponse({ status: 200, type: GetMovieByIdRespDto })
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('movies/:movieId')
+  async getMovieById(
+    @Param('movieId') movieId: number,
+  ): Promise<GetMovieByIdRespDto> {
+    const movie = await this.moviesService.getMovieById(movieId);
+
+    return { movie };
   }
 
   @ApiResponse({ status: 200, type: CreateMovieRespDto })
@@ -79,18 +100,25 @@ export class UsersController {
   )
   @Post('movies')
   async createMovie(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 1000000 }),
-          new FileTypeValidator({ fileType: '.(png|jpeg|jpg)' }),
-        ],
-      }),
-    )
+    @UploadedFile()
     file: Express.Multer.File,
     @Request() req,
     @Body() createMovieDto: CreateMovieReqDto,
   ): Promise<CreateMovieRespDto> {
+    if (!file) {
+      throw new BadRequestException('File required');
+    }
+
+    const allowedTypes = ['.png', '.jpeg', '.jpg'];
+
+    if (!allowedTypes.includes(extname(file.originalname).toLowerCase())) {
+      throw new BadRequestException('Invalid file type');
+    }
+
+    if (file.size > 1000000) {
+      throw new BadRequestException('File size exceeds limit');
+    }
+
     const user = await this.usersService.findOneById(req.user.id);
 
     if (!user) {
@@ -107,6 +135,8 @@ export class UsersController {
       createMovieDto,
       posterUrl,
     );
+
+    delete movie.user;
 
     return { movie };
   }

@@ -14,4 +14,7 @@ export class GetMoviesRespDto {
     ],
   })
   movies: Movie[];
+
+  @ApiProperty({ example: 23 })
+  totalCount: number;
 }
