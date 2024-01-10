@@ -7,6 +7,9 @@ import { Movie } from '../movies/movie.entity';
 dotenvConfig({ path: '.env' });
 
 const config = {
+  extra: {
+    ssl: 'true',
+  },
   type: 'postgres',
   host: process.env.POSTGRES_HOST,
   port: Number(process.env.POSTGRES_PORT),
